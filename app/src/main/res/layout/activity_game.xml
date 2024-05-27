@@ -298,12 +298,13 @@
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:orientation="horizontal"
-           android:layout_marginTop="30dp">
+           android:layout_marginTop="30dp"
+           android:layout_marginBottom="12dp">
 
            <Button
                android:id="@+id/RestartNow"
                android:layout_width="wrap_content"
-               android:layout_height="81dp"
+               android:layout_height="70dp"
                android:layout_gravity="center"
                android:layout_marginEnd="90dp"
                android:background="@drawable/baseline_restart_alt_24" />
@@ -317,4 +318,15 @@
 
 
    </LinearLayout>
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/ad_view"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        app:adUnitId="ca-app-pub-6209002206896630/1572360446"
+        app:adSize="BANNER"
+        tools:ignore="ObsoleteLayoutParam" />
+
+
 </LinearLayout>

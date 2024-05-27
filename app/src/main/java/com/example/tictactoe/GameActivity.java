@@ -1,22 +1,26 @@
 package com.example.tictactoe;
 
-import android.animation.AnimatorSet;
+
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.view.Window;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.multidex.MultiDex;
 
-import com.example.tictactoe.R;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 public class GameActivity extends AppCompatActivity {
 
@@ -29,11 +33,12 @@ public class GameActivity extends AppCompatActivity {
     private char currentPlayer = 'X';
     private boolean gameEnded = false;
 
+    private InterstitialAd mInterstitialAd;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        MultiDex.install(this);
 
         //hiding toolbar
         if (getSupportActionBar() != null) {
@@ -51,32 +56,49 @@ public class GameActivity extends AppCompatActivity {
         textViews[7] = findViewById(R.id.BoxEight);
         textViews[8] = findViewById(R.id.BoxNine);
 
-
-        LinearLayout linearLayout;
-        linearLayout = findViewById(R.id.layoutBottom);
-
         playerOneTextView = findViewById(R.id.playerOne);
         playerTwoTextView = findViewById(R.id.playerTwo);
 
         Button restartButton = findViewById(R.id.RestartNow);
         Button MainMenu = findViewById(R.id.MainMenu);
 
-        //declaration of the arrow that will animate after the every click of player
+        MobileAds.initialize(this, initializationStatus -> {
+        });
+        AdView mAd_view = findViewById(R.id.ad_view);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAd_view.loadAd(adRequest);
+        InterstitialAd.load(this,"ca-app-pub-3940256099942544/1033173712", adRequest,
+                new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        // The mInterstitialAd reference will be null until
+                        // an ad is loaded.
+                        mInterstitialAd = interstitialAd;
+                        Log.i(TAG, "onAdLoaded");
+                    }
 
-//        Animation animation = AnimationUtils.loadAnimation(this, R.anim.fade_in_and_translate);
-//        linearLayout.startAnimation(animation);
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        // Handle the error
+                        Log.d(TAG, loadAdError.toString());
+                        mInterstitialAd = null;
+                    }
+                });
 
+        MainMenu.setOnClickListener(v -> {
 
-        MainMenu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                v.startAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.fade_out_to_right));
-                for (int i = 0; i < 9; i++) {
-                    textViews[i].setText("");
-                    board[i] = ' ';
-                }
-                startAgainGame();
+            if (mInterstitialAd != null) {
+                mInterstitialAd.show(GameActivity.this);
+            } else {
+                Log.d("TAG", "The interstitial ad wasn't ready yet.");
             }
+
+            v.startAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.fade_out_to_right));
+            for (int i = 0; i < 9; i++) {
+                textViews[i].setText("");
+                board[i] = ' ';
+            }
+            startAgainGame();
         });
         // Set player names in the TextViews
         String player1Name = getIntent().getStringExtra("player1");
@@ -93,20 +115,17 @@ public class GameActivity extends AppCompatActivity {
         // Set click listeners for each text view
         for (int i = 0; i < 9; i++) {
             final int index = i;
-            textViews[i].setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onBoxClick(index);
-                }
-            });
+            textViews[i].setOnClickListener(v -> onBoxClick(index));
         }
 
         // Set click listener for the restart button
-        restartButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                v.animate().rotationBy(360).setDuration(500).start();
-                restartGame();
+        restartButton.setOnClickListener(v -> {
+            v.animate().rotationBy(360).setDuration(500).start();
+            restartGame();
+            if (mInterstitialAd != null) {
+                mInterstitialAd.show(GameActivity.this);
+            } else {
+                Log.d("TAG", "The interstitial ad wasn't ready yet.");
             }
         });
     }
@@ -121,15 +140,15 @@ public class GameActivity extends AppCompatActivity {
                 gameEnded = true;
 
                 // Show the ResultActivity dialog with the winner's name
-                ResultActivity resultDialog = new ResultActivity(this, winner + " wins!", winner, this);
+                ResultDialog resultDialog = new ResultDialog(this, winner + " wins!", winner, this);
                 resultDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 resultDialog.setCancelable(false);
                 resultDialog.show();
             } else if (isBoardFull()) {
-                showToast("It's a draw!");
+                showToast();
 
                 // Show the "Draw" dialog
-                ResultActivity drawDialog = new ResultActivity(this, "Draw !", null, this);
+                ResultDialog drawDialog = new ResultDialog(this, "Draw !", null, this);
                 drawDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 drawDialog.setCancelable(false);
                 drawDialog.show();
@@ -190,8 +209,8 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    private void showToast() {
+        Toast.makeText(this, "It's a draw!", Toast.LENGTH_SHORT).show();
     }
     public void startAgainGame() {
         Intent intent = new Intent(GameActivity.this, MainActivity.class);
