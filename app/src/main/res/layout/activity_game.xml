@@ -304,7 +304,7 @@
            <Button
                android:id="@+id/RestartNow"
                android:layout_width="wrap_content"
-               android:layout_height="70dp"
+               android:layout_height="80dp"
                android:layout_gravity="center"
                android:layout_marginEnd="90dp"
                android:background="@drawable/baseline_restart_alt_24" />

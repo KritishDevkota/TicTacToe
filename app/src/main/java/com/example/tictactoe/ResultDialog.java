@@ -1,9 +1,9 @@
 package com.example.tictactoe;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -19,7 +19,6 @@ public class ResultDialog extends Dialog {
         this.gameActivity = gameActivity;
     }
 
-    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,11 +34,19 @@ public class ResultDialog extends Dialog {
             messageText.setText("Draw!");
         }
 
-        mainMenu.setOnClickListener(v -> gameActivity.startAgainGame());
+        mainMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gameActivity.startAgainGame();
+            }
+        });
 
-        startAgain.setOnClickListener(v -> {
-            gameActivity.restartGame();
-            dismiss();
+        startAgain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gameActivity.restartGame();
+                dismiss();
+            }
         });
     }
 }
